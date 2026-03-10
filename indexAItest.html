@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Bottleneck & Agent Mapper</title>
 
-    <!-- Your CSS stays exactly the same -->
     <style>
       body {
         font-family: Arial, Helvetica, sans-serif;
@@ -174,8 +173,6 @@
     </header>
 
     <div class="container">
-
-      <!-- Stats -->
       <div class="stats">
         <div class="stat"><div>Total Bottlenecks</div><h2 id="total">0</h2></div>
         <div class="stat"><div>Client Requests</div><h2 id="s1">0</h2></div>
@@ -184,36 +181,34 @@
         <div class="stat"><div>Other</div><h2 id="s4">0</h2></div>
       </div>
 
-      <!-- Add bottleneck -->
       <div class="card">
         <h2>Add Bottleneck</h2>
-
         <div class="grid">
           <div>
             <label>Process</label>
-            <input id="process" placeholder="Technical Documentation Review" />
+            <input id="process" />
 
             <label>Problem</label>
-            <textarea id="problem" placeholder="Describe the bottleneck"></textarea>
+            <textarea id="problem"></textarea>
 
             <label>Impact</label>
-            <textarea id="impact" placeholder="Time loss, delays, manual work..."></textarea>
+            <textarea id="impact"></textarea>
 
             <label>Effort (1-10)</label>
             <input id="effort" type="number" min="1" max="10" value="5" />
-            <div class="tooltip">1 = very low effort, 10 = very high effort</div>
+            <div class="tooltip">1 = low effort</div>
 
             <label>Impact Score (1-10)</label>
             <input id="impactScore" type="number" min="1" max="10" value="5" />
-            <div class="tooltip">1 = very low impact, 10 = very high impact</div>
+            <div class="tooltip">1 = low impact</div>
           </div>
 
           <div>
             <label>AI Agent Idea</label>
-            <input id="agent" placeholder="Dossier Completeness Checker" />
+            <input id="agent" />
 
             <label>Expected Benefit</label>
-            <textarea id="benefit" placeholder="Automation, time reduction, quality improvement"></textarea>
+            <textarea id="benefit"></textarea>
 
             <label>Category</label>
             <select id="categorySelect">
@@ -230,52 +225,42 @@
         </div>
       </div>
 
-      <!-- Opportunity Map -->
       <div class="card">
         <h2>AI Opportunity Map</h2>
         <div id="mapContainer" class="map"></div>
       </div>
 
-      <!-- Priority Matrix -->
       <div class="card">
         <h2>AI Priority Matrix</h2>
-        <p>Prioritize AI opportunities by impact vs effort.</p>
-
-        <div class="priority-map">
-          <h3>Impact vs Effort</h3>
-          <div class="matrix">
-            <div class="cell" id="low-effort-low-impact">Low Effort / Low Impact</div>
-            <div class="cell" id="high-effort-low-impact">High Effort / Low Impact</div>
-            <div class="cell" id="low-effort-high-impact">Low Effort / High Impact</div>
-            <div class="cell" id="high-effort-high-impact">High Effort / High Impact</div>
-          </div>
+        <p>Impact vs Effort</p>
+        <div class="matrix">
+          <div class="cell" id="low-effort-low-impact">Low Effort / Low Impact</div>
+          <div class="cell" id="high-effort-low-impact">High Effort / Low Impact</div>
+          <div class="cell" id="low-effort-high-impact">Low Effort / High Impact</div>
+          <div class="cell" id="high-effort-high-impact">High Effort / High Impact</div>
         </div>
       </div>
 
-      <!-- Database -->
       <div class="card">
         <h2>Bottleneck Database</h2>
-        <input class="search" id="search" placeholder="Search bottlenecks..." oninput="render()" />
+        <input id="search" class="search" oninput="render()" />
         <div id="list"></div>
       </div>
-
     </div>
 
-    <!-- Firebase SDK Compat -->
+    <!-- Firebase SDK -->
+<script src= "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src= "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src= "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
-    <!-- SheetJS for Excel -->
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Excel library -->
+<script src= "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
-      /* ============================================================
-         1) INITIALIZE FIREBASE
-      ============================================================ */
 
+      /* ---------------------------
+         FIREBASE INIT
+      ---------------------------- */
       const firebaseConfig = {
         apiKey: "AIzaSyCd0rRTxyrRrZacqayNYFvAQbkGl-AwDQo",
         authDomain: "ai-bottleneck-mapper-b9a9c.firebaseapp.com",
@@ -283,137 +268,113 @@
         storageBucket: "ai-bottleneck-mapper-b9a9c.firebasestorage.app",
         messagingSenderId: "339570811122",
         appId: "1:339570811122:web:2bf5927f8f2cb2a448706b",
-        measurementId: "G-YQ03Y8JMDB"
+        measurementId: "G-YQ03Y8JMDB",
       };
 
       firebase.initializeApp(firebaseConfig);
-
       const db = firebase.firestore();
       const auth = firebase.auth();
-
-      // Auto-login anonimo
-      auth.signInAnonymously().catch((err) => console.error(err));
+      auth.signInAnonymously();
 
 
-      /* ============================================================
-         2) CATEGORY LIST
-      ============================================================ */
-
-      let categories = [
-        "Client Requests",
-        "Manual Tool Work",
-        "Internal Knowledge",
-        "Other",
-      ];
-
-      let items = []; // popolati da Firestore realtime
-
-      const categorySelect = document.getElementById("categorySelect");
+      /* ---------------------------
+         GLOBAL VARIABLES
+      ---------------------------- */
+      let categories = ["Client Requests","Manual Tool Work","Internal Knowledge","Other"];
+      let items = []; // populated by Firestore
 
 
-      /* ============================================================
-         3) UI HELPERS
-      ============================================================ */
+      /* ---------------------------
+         RENDER / MAP HELPERS
+      ---------------------------- */
 
       function addMapColumns() {
         const container = document.getElementById("mapContainer");
         container.innerHTML = "";
-
-        categories.forEach((c) => {
-          const div = document.createElement("div");
-          div.className = "map-col";
-          div.id = "map-" + c.replace(/\s/g, "");
-          div.innerHTML = `<h3>${c}</h3>`;
-          container.appendChild(div);
+        categories.forEach(c => {
+          container.innerHTML += `<div class="map-col" id="map-${c.replace(/\s/g,'')}"><h3>${c}</h3></div>`;
         });
       }
 
       function resetMatrix() {
-        document.getElementById("low-effort-low-impact").innerHTML =
-          "Low Effort / Low Impact";
-        document.getElementById("high-effort-low-impact").innerHTML =
-          "High Effort / Low Impact";
-        document.getElementById("low-effort-high-impact").innerHTML =
-          "Low Effort / High Impact";
-        document.getElementById("high-effort-high-impact").innerHTML =
-          "High Effort / High Impact";
+        document.getElementById("low-effort-low-impact").innerHTML = "Low Effort / Low Impact";
+        document.getElementById("high-effort-low-impact").innerHTML = "High Effort / Low Impact";
+        document.getElementById("low-effort-high-impact").innerHTML = "Low Effort / High Impact";
+        document.getElementById("high-effort-high-impact").innerHTML = "High Effort / High Impact";
       }
 
 
-      /* ============================================================
-         4) ADD ITEM (SAVE TO FIRESTORE)
-      ============================================================ */
-
+      /* ---------------------------
+         ADD ITEM (FIRESTORE)
+      ---------------------------- */
       async function addItem() {
-        const process = document.getElementById("process").value.trim();
-        const problem = document.getElementById("problem").value.trim();
-        const impact = document.getElementById("impact").value.trim();
-        const agent = document.getElementById("agent").value.trim();
-        const benefit = document.getElementById("benefit").value.trim();
+        const process = process.value.trim();
+        const problem = problem.value.trim();
+        const impact = impact.value.trim();
+        const agent = agent.value.trim();
+        const benefit = benefit.value.trim();
         const category = categorySelect.value;
-
-        const effort = parseInt(document.getElementById("effort").value, 10);
-        const impactScore = parseInt(document.getElementById("impactScore").value, 10);
+        const effort = parseInt(document.getElementById("effort").value);
+        const impactScore = parseInt(document.getElementById("impactScore").value);
 
         if (!process || !problem) {
-          alert("Compila almeno 'Process' e 'Problem'.");
+          alert("Fill process and problem");
           return;
         }
 
         await db.collection("bottlenecks").add({
-          process,
-          problem,
-          impact,
-          agent,
-          benefit,
-          category,
-          effort: isNaN(effort) ? 5 : effort,
-          impactScore: isNaN(impactScore) ? 5 : impactScore,
+          process, problem, impact, agent, benefit, category, effort, impactScore,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
-        // reset form
-        document.getElementById("process").value = "";
-        document.getElementById("problem").value = "";
-        document.getElementById("impact").value = "";
-        document.getElementById("agent").value = "";
-        document.getElementById("benefit").value = "";
-        document.getElementById("effort").value = 5;
-        document.getElementById("impactScore").value = 5;
+        process.value = "";
+        problem.value = "";
+        impact.value = "";
+        agent.value = "";
+        benefit.value = "";
+        effort.value = 5;
+        impactScore.value = 5;
       }
 
 
-      /* ============================================================
-         5) REMOVE ITEM (DELETE FROM FIRESTORE)
-      ============================================================ */
-
+      /* ---------------------------
+         REMOVE ITEM (FIRESTORE)
+      ---------------------------- */
       async function removeItem(id) {
         await db.collection("bottlenecks").doc(id).delete();
       }
 
 
-      /* ============================================================
-         6) RENDER UI
-      ============================================================ */
+      /* ---------------------------
+         REALTIME LISTENER
+      ---------------------------- */
+      auth.onAuthStateChanged(() => {
+        db.collection("bottlenecks").orderBy("createdAt","asc")
+          .onSnapshot(snap => {
+            items = [];
+            snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            render();
+          });
+      });
 
+
+      /* ---------------------------
+         RENDER ALL
+      ---------------------------- */
       function render() {
         const list = document.getElementById("list");
-        const search = (document.getElementById("search")?.value || "").toLowerCase();
-
+        const search = (document.getElementById("search").value || "").toLowerCase();
         list.innerHTML = "";
         addMapColumns();
         resetMatrix();
 
-        let count = {};
-        categories.forEach((c) => (count[c] = 0));
+        let count = { "Client Requests":0, "Manual Tool Work":0, "Internal Knowledge":0, "Other":0 };
 
-        items
-          .filter((i) => JSON.stringify(i).toLowerCase().includes(search))
-          .forEach((i) => {
-            const div = document.createElement("div");
-            div.className = "list-item";
+        items.filter(i => JSON.stringify(i).toLowerCase().includes(search))
+             .forEach(i => {
 
-            div.innerHTML = `
+          list.innerHTML += `
+            <div class="list-item">
               <strong>${i.process}</strong>
               <span class="tag">${i.category}</span>
               <p><b>Problem:</b> ${i.problem}</p>
@@ -421,90 +382,49 @@
               <p><b>AI Agent:</b> ${i.agent}</p>
               <p><b>Benefit:</b> ${i.benefit}</p>
               <button onclick="removeItem('${i.id}')">Delete</button>
-            `;
-            list.appendChild(div);
+            </div>
+          `;
 
-            // Map
-            const node = document.createElement("div");
-            node.className = "node";
-            node.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong>${i.process}`;
+          const node = `<div class="node"><strong>${i.agent}</strong>${i.process}</div>`;
+          document.getElementById("map-"+i.category.replace(/\s/g,"")).innerHTML += node;
 
-            document
-              .getElementById("map-" + i.category.replace(/\s/g, ""))
-              .appendChild(node);
+          count[i.category]++;
 
-            count[i.category]++;
+          const e = i.effort;
+          const imp = i.impactScore;
 
-            // Priority Matrix
-            const e = i.effort || 5;
-            const imp = i.impactScore || 5;
+          if (e<=5 && imp<=5) document.getElementById("low-effort-low-impact").innerHTML += node;
+          if (e>5 && imp<=5) document.getElementById("high-effort-low-impact").innerHTML += node;
+          if (e<=5 && imp>5) document.getElementById("low-effort-high-impact").innerHTML += node;
+          if (e>5 && imp>5) document.getElementById("high-effort-high-impact").innerHTML += node;
+        });
 
-            const card = `<div class='node'><strong>${i.agent}</strong>${i.process}</div>`;
-
-            if (e <= 5 && imp <= 5)
-              document.getElementById("low-effort-low-impact").innerHTML += card;
-
-            if (e > 5 && imp <= 5)
-              document.getElementById("high-effort-low-impact").innerHTML += card;
-
-            if (e <= 5 && imp > 5)
-              document.getElementById("low-effort-high-impact").innerHTML += card;
-
-            if (e > 5 && imp > 5)
-              document.getElementById("high-effort-high-impact").innerHTML += card;
-          });
-
-        // Stats
-        document.getElementById("total").innerText = items.length;
-        document.getElementById("s1").innerText = count["Client Requests"] || 0;
-        document.getElementById("s2").innerText = count["Manual Tool Work"] || 0;
-        document.getElementById("s3").innerText = count["Internal Knowledge"] || 0;
-        document.getElementById("s4").innerText = count["Other"] || 0;
+        total.innerText = items.length;
+        s1.innerText = count["Client Requests"];
+        s2.innerText = count["Manual Tool Work"];
+        s3.innerText = count["Internal Knowledge"];
+        s4.innerText = count["Other"];
       }
 
 
-      /* ============================================================
-         7) EXPORT CSV + XLSX
-      ============================================================ */
-
+      /* ---------------------------
+         EXPORT FUNCTIONS
+      ---------------------------- */
       function exportCSV() {
         let csv = "Process,Problem,Impact,Agent,Benefit,Category,Effort,ImpactScore\n";
-        items.forEach((i) => {
+        items.forEach(i => {
           csv += `"${i.process}","${i.problem}","${i.impact}","${i.agent}","${i.benefit}","${i.category}",${i.effort},${i.impactScore}\n`;
         });
-
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-
+        const blob = new Blob([csv], {type:"text/csv"});
         const a = document.createElement("a");
-        a.href = url;
+        a.href = URL.createObjectURL(blob);
         a.download = "ai_bottlenecks.csv";
         a.click();
       }
 
       function exportXLSX() {
-        const header = [
-          "Process",
-          "Problem",
-          "Impact",
-          "Agent",
-          "Benefit",
-          "Category",
-          "Effort",
-          "ImpactScore",
-        ];
-
-        const rows = items.map((i) => [
-          i.process,
-          i.problem,
-          i.impact,
-          i.agent,
-          i.benefit,
-          i.category,
-          i.effort,
-          i.impactScore,
-        ]);
-
+        const header = ["Process","Problem","Impact","Agent","Benefit","Category","Effort","ImpactScore"];
+        const rows = items.map(i => [i.process,i.problem,i.impact,i.agent,i.benefit,i.category,i.effort,i.impactScore]);
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
         XLSX.utils.book_append_sheet(wb, ws, "Bottlenecks");
@@ -512,27 +432,9 @@
       }
 
 
-      /* ============================================================
-         8) REALTIME LISTENER
-      ============================================================ */
-
-      function initRealtime() {
-        db.collection("bottlenecks")
-          .orderBy("createdAt", "asc")
-          .onSnapshot((snapshot) => {
-            items = [];
-            snapshot.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
-            render();
-          });
-      }
-
-      auth.onAuthStateChanged(() => initRealtime());
-
-      addMapColumns();
-      resetMatrix();
-
-
-      /* Expose global HTML functions */
+      /* ---------------------------
+         GLOBAL EXPOSURE
+      ---------------------------- */
       window.addItem = addItem;
       window.removeItem = removeItem;
       window.exportCSV = exportCSV;
@@ -540,5 +442,6 @@
       window.render = render;
 
     </script>
+
   </body>
 </html>
