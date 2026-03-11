@@ -159,6 +159,37 @@
         margin-top: -6px;
         margin-bottom: 10px;
       }
+
+      /* CSS aggiornato per checkbox */
+.checkbox-container {
+  display: flex;         /* mette checkbox e testo sulla stessa riga */
+  align-items: center;   /* allinea verticalmente */
+  gap: 8px;              /* spazio tra quadrato e testo */
+  margin-bottom: 14px;   /* come gli altri input */
+  font-size: 14px;
+}
+
+.checkbox-container input[type="checkbox"] {
+  width: 16px;           /* dimensione quadrato */
+  height: 16px;
+  flex-shrink: 0;        /* evita che il quadrato si riduca */
+  cursor: pointer;
+}
+
+/* Modifica input globali per escludere checkbox */
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
     </style>
   </head>
   <body>
@@ -213,6 +244,13 @@
             <div class="tooltip">
               1 = very low effort, 10 = very high effort
             </div>
+            
+   <div class="checkbox-container">
+      <input type="checkbox" id="reviewedByDeveloper" />
+      <span>Reviewed by Development Team</span>
+    </div>
+
+
             <label>Impact Score (1-10)</label
             ><input id="impactScore" type="number" min="1" max="10" value="5" />
             <div class="tooltip">
@@ -240,11 +278,14 @@
               <option>Auditor</option>
               <option>Lead Auditor</option>
               <option>Project Manager</option>
+              
             </select>
             <button onclick="addItem()">Add Entry</button>
-<button onclick="saveEdit()" id="saveEditBtn" style="display:none;">Save Edit</button>
-<button class="secondary" onclick="exportCSV()">Export CSV</button>
-<button class="secondary" onclick="clearForm()">Clear Form</button>
+            <button onclick="saveEdit()" id="saveEditBtn" style="display: none">
+              Save Edit
+            </button>
+            <button class="secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="secondary" onclick="clearForm()">Clear Form</button>
           </div>
         </div>
       </div>
@@ -312,18 +353,19 @@
         "Other",
       ];
 
-
       function saveChanges() {
-  // Se vuoi salvare tutti i dati su Firebase, puoi fare un loop:
-  items.forEach(item => {
-    if (!item.id) return; // salta items senza id
-    db.collection("bottlenecks").doc(item.id).set(item, { merge: true })
-      .catch(console.error);
-  });
-  
-  // Aggiorna lista, mappa e matrix
-  render();
-}
+        // Se vuoi salvare tutti i dati su Firebase, puoi fare un loop:
+        items.forEach((item) => {
+          if (!item.id) return; // salta items senza id
+          db.collection("bottlenecks")
+            .doc(item.id)
+            .set(item, { merge: true })
+            .catch(console.error);
+        });
+
+        // Aggiorna lista, mappa e matrix
+        render();
+      }
       function fetchItems() {
         db.collection("bottlenecks")
           .orderBy("createdAt")
@@ -337,17 +379,35 @@
       }
 
       function fetchItems() {
-  db.collection("bottlenecks").orderBy("createdAt").get()
-    .then(snapshot => {
-      items = [];
-      snapshot.forEach(doc => {
-        let data = doc.data();
-        data.id = doc.id; // Fondamentale: salva l'ID del documento
-        items.push(data);
-      });
-      render();
-    }).catch(console.error);
-}
+        db.collection("bottlenecks")
+          .orderBy("createdAt")
+          .get()
+          .then((snapshot) => {
+            items = [];
+            snapshot.forEach((doc) => {
+              let data = doc.data();
+              data.id = doc.id; // Fondamentale: salva l'ID del documento
+              items.push(data);
+            });
+            render();
+          })
+          .catch(console.error);
+      }
+
+      function updateEffortAccess() {
+        const role = document.getElementById("roleSelect").value;
+        const effortInput = document.getElementById("effort");
+
+        if (role === "Developer") {
+          effortInput.disabled = false; // Developer può modificare
+        } else {
+          effortInput.disabled = true; // Tutti gli altri no
+        }
+      }
+
+      document
+        .getElementById("roleSelect")
+        .addEventListener("change", updateEffortAccess);
 
       function addItem() {
         const newItem = {
@@ -366,7 +426,6 @@
           alert("Fill process and problem");
           return;
         }
-  
 
         db.collection("bottlenecks")
           .add(newItem)
@@ -378,84 +437,90 @@
           .catch(console.error);
       }
 
+      function addItem() {
+        const newItem = {
+          process: document.getElementById("process").value,
+          problem: document.getElementById("problem").value,
+          impact: document.getElementById("impact").value,
+          agent: document.getElementById("agent").value,
+          benefit: document.getElementById("benefit").value,
+          category: document.getElementById("categorySelect").value,
+          role: document.getElementById("roleSelect").value,
+          effort: parseInt(document.getElementById("effort").value),
+          impactScore: parseInt(document.getElementById("impactScore").value),
+          createdAt: new Date(),
+        };
 
+        if (!newItem.process || !newItem.problem) {
+          alert("Fill process and problem");
+          return;
+        }
 
-function addItem() {
-  const newItem = {
-    process: document.getElementById("process").value,
-    problem: document.getElementById("problem").value,
-    impact: document.getElementById("impact").value,
-    agent: document.getElementById("agent").value,
-    benefit: document.getElementById("benefit").value,
-    category: document.getElementById("categorySelect").value,
-    role: document.getElementById("roleSelect").value,
-    effort: parseInt(document.getElementById("effort").value),
-    impactScore: parseInt(document.getElementById("impactScore").value),
-    createdAt: new Date()
-  };
-
-  if (!newItem.process || !newItem.problem) { 
-    alert("Fill process and problem"); 
-    return; 
-  }
-
-  db.collection("bottlenecks").add(newItem)
-    .then((docRef) => { 
-      newItem.id = docRef.id; // Recupera l'ID appena creato
-      items.push(newItem); 
-      render(); 
-      // **rimosso clearForm()** così la form resta compilata
-    })
-    .catch(console.error);
-}
+        db.collection("bottlenecks")
+          .add(newItem)
+          .then((docRef) => {
+            newItem.id = docRef.id; // Recupera l'ID appena creato
+            items.push(newItem);
+            render();
+            // **rimosso clearForm()** così la form resta compilata
+          })
+          .catch(console.error);
+      }
 
       function addMapColumns() {
-  const container = document.getElementById("mapContainer");
-  container.innerHTML = ""; // pulisce tutto prima di ricreare
-  categories.forEach((c) => {
-    const div = document.createElement("div");
-    div.className = "map-col";
-    div.id = "map-" + c.replace(/\s/g, "");
-    div.innerHTML = `<h3>${c}</h3>`;
-    container.appendChild(div);
-  });
-}
+        const container = document.getElementById("mapContainer");
+        container.innerHTML = ""; // pulisce tutto prima di ricreare
+        categories.forEach((c) => {
+          const div = document.createElement("div");
+          div.className = "map-col";
+          div.id = "map-" + c.replace(/\s/g, "");
+          div.innerHTML = `<h3>${c}</h3>`;
+          container.appendChild(div);
+        });
+      }
 
-  
       function render() {
-  const list = document.getElementById("list");
-  const search = document.getElementById("search").value.toLowerCase();
-  list.innerHTML = "";
-  addMapColumns();
+        const list = document.getElementById("list");
+        const search = document.getElementById("search").value.toLowerCase();
+        list.innerHTML = "";
+        addMapColumns();
 
-  let count = {};
-  categories.forEach((c) => (count[c] = 0));
+        let count = {};
+        categories.forEach((c) => (count[c] = 0));
 
-  // **Svuota le celle della Priority Matrix prima di aggiungere nuovi nodi**
-  const matrixCells = [
-    "low-effort-low-impact",
-    "high-effort-low-impact",
-    "low-effort-high-impact",
-    "high-effort-high-impact"
-  ];
-  matrixCells.forEach(id => {
-    const cell = document.getElementById(id);
-    switch(id) {
-      case "low-effort-low-impact": cell.innerHTML = "Low Effort / Low Impact"; break;
-      case "high-effort-low-impact": cell.innerHTML = "High Effort / Low Impact"; break;
-      case "low-effort-high-impact": cell.innerHTML = "Low Effort / High Impact"; break;
-      case "high-effort-high-impact": cell.innerHTML = "High Effort / High Impact"; break;
-    }
-  });
+        // **Svuota le celle della Priority Matrix prima di aggiungere nuovi nodi**
+        const matrixCells = [
+          "low-effort-low-impact",
+          "high-effort-low-impact",
+          "low-effort-high-impact",
+          "high-effort-high-impact",
+        ];
+        matrixCells.forEach((id) => {
+          const cell = document.getElementById(id);
+          switch (id) {
+            case "low-effort-low-impact":
+              cell.innerHTML = "Low Effort / Low Impact";
+              break;
+            case "high-effort-low-impact":
+              cell.innerHTML = "High Effort / Low Impact";
+              break;
+            case "low-effort-high-impact":
+              cell.innerHTML = "Low Effort / High Impact";
+              break;
+            case "high-effort-high-impact":
+              cell.innerHTML = "High Effort / High Impact";
+              break;
+          }
+        });
 
-  // Filtra e mostra gli item
-  items
-    .filter((i) => JSON.stringify(i).toLowerCase().includes(search))
-    .forEach((i, index) => {
-      // Lista Bottleneck
-      const div = document.createElement("div");
-      div.className = "list-item";
-div.innerHTML = `<strong>${i.process}</strong><span class="tag">${i.category}</span>
+        // Filtra e mostra gli item
+        items
+          .filter((i) => JSON.stringify(i).toLowerCase().includes(search))
+          .forEach((i, index) => {
+            // Lista Bottleneck
+            const div = document.createElement("div");
+            div.className = "list-item";
+            div.innerHTML = `<strong>${i.process}</strong><span class="tag">${i.category}</span>
 <p><b>Role:</b> ${i.role}</p>
 <p><b>Problem:</b> ${i.problem}</p>
 <p><b>Impact:</b> ${i.impact}</p>
@@ -464,125 +529,131 @@ div.innerHTML = `<strong>${i.process}</strong><span class="tag">${i.category}</s
 <button onclick="editItem(${index})">Edit</button>
 <button onclick="removeItem(${index})">Delete</button>`;
 
+            list.appendChild(div);
 
-      list.appendChild(div);
+            // AI Opportunity Map
+            const node = document.createElement("div");
+            node.className = "node";
+            node.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong>${i.process} (${i.role})`;
+            document
+              .getElementById("map-" + i.category.replace(/\s/g, ""))
+              .appendChild(node);
 
-      // AI Opportunity Map
-      const node = document.createElement("div");
-      node.className = "node";
-      node.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong>${i.process} (${i.role})`;
-      document
-        .getElementById("map-" + i.category.replace(/\s/g, ""))
-        .appendChild(node);
+            // Aggiorna contatori categoria
+            count[i.category]++;
 
-      // Aggiorna contatori categoria
-      count[i.category]++;
+            // **Priority Matrix**
+            const e = i.effort,
+              imp = i.impactScore;
+            if (e <= 5 && imp <= 5)
+              document.getElementById("low-effort-low-impact").innerHTML +=
+                `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
+            else if (e > 5 && imp <= 5)
+              document.getElementById("high-effort-low-impact").innerHTML +=
+                `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
+            else if (e <= 5 && imp > 5)
+              document.getElementById("low-effort-high-impact").innerHTML +=
+                `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
+            else if (e > 5 && imp > 5)
+              document.getElementById("high-effort-high-impact").innerHTML +=
+                `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
+          });
 
-      // **Priority Matrix**
-      const e = i.effort, imp = i.impactScore;
-      if (e <= 5 && imp <= 5)
-        document.getElementById("low-effort-low-impact").innerHTML +=
-          `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
-      else if (e > 5 && imp <= 5)
-        document.getElementById("high-effort-low-impact").innerHTML +=
-          `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
-      else if (e <= 5 && imp > 5)
-        document.getElementById("low-effort-high-impact").innerHTML +=
-          `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
-      else if (e > 5 && imp > 5)
-        document.getElementById("high-effort-high-impact").innerHTML +=
-          `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
-    });
+        // Aggiorna contatori
+        document.getElementById("total").innerText = items.length;
+        document.getElementById("s1").innerText = count["Client Requests"] || 0;
+        document.getElementById("s2").innerText =
+          count["Manual Tool Work"] || 0;
+        document.getElementById("s3").innerText =
+          count["Internal Knowledge"] || 0;
+        document.getElementById("s4").innerText = count["Other"] || 0;
+      }
 
-  // Aggiorna contatori
-  document.getElementById("total").innerText = items.length;
-  document.getElementById("s1").innerText = count["Client Requests"] || 0;
-  document.getElementById("s2").innerText = count["Manual Tool Work"] || 0;
-  document.getElementById("s3").innerText = count["Internal Knowledge"] || 0;
-  document.getElementById("s4").innerText = count["Other"] || 0;
-}
+      function editItem(index) {
+        const item = items[index];
+        editingIndex = index;
 
+        document.getElementById("process").value = item.process;
+        document.getElementById("problem").value = item.problem;
+        document.getElementById("impact").value = item.impact;
+        document.getElementById("agent").value = item.agent;
+        document.getElementById("benefit").value = item.benefit;
+        document.getElementById("effort").value = item.effort;
+        document.getElementById("impactScore").value = item.impactScore;
+        document.getElementById("categorySelect").value = item.category;
+        document.getElementById("roleSelect").value = item.role;
 
- 
-function editItem(index) {
-  const item = items[index];
-  editingIndex = index;
+        document.getElementById("saveEditBtn").style.display = "inline-block";
+        document
+          .getElementById("process")
+          .scrollIntoView({ behavior: "smooth" });
+        document.getElementById("process").focus();
+        document.getElementById("roleSelect").value = item.role;
+        updateEffortAccess(); // aggiorna lo stato di effort
 
-  document.getElementById("process").value = item.process;
-  document.getElementById("problem").value = item.problem;
-  document.getElementById("impact").value = item.impact;
-  document.getElementById("agent").value = item.agent;
-  document.getElementById("benefit").value = item.benefit;
-  document.getElementById("effort").value = item.effort;
-  document.getElementById("impactScore").value = item.impactScore;
-  document.getElementById("categorySelect").value = item.category;
-  document.getElementById("roleSelect").value = item.role;
+        const addButton = document.querySelector("button[onclick='addItem()']");
+        addButton.textContent = "Save Changes";
+        addButton.onclick = saveEdit;
+      }
 
-    document.getElementById("saveEditBtn").style.display = "inline-block";
-    document.getElementById("process").scrollIntoView({behavior:"smooth"});
-    document.getElementById("process").focus();
+      function saveEdit() {
+        if (editingIndex === null) return;
 
-  const addButton = document.querySelector("button[onclick='addItem()']");
-  addButton.textContent = "Save Changes";
-  addButton.onclick = saveEdit;
-  
-}
+        const item = items[editingIndex];
 
-function saveEdit() {
+        item.process = document.getElementById("process").value;
+        item.problem = document.getElementById("problem").value;
+        item.impact = document.getElementById("impact").value;
+        item.agent = document.getElementById("agent").value;
+        item.benefit = document.getElementById("benefit").value;
+        item.category = document.getElementById("categorySelect").value;
+        item.role = document.getElementById("roleSelect").value;
+        item.effort = parseInt(document.getElementById("effort").value);
+        item.impactScore = parseInt(
+          document.getElementById("impactScore").value,
+        );
 
-  if (editingIndex === null) return;
+        db.collection("bottlenecks")
+          .doc(item.id)
+          .set(item, { merge: true })
+          .then(() => {
+            editingIndex = null;
 
-  const item = items[editingIndex];
+            render();
+            clearForm();
 
-  item.process = document.getElementById("process").value;
-  item.problem = document.getElementById("problem").value;
-  item.impact = document.getElementById("impact").value;
-  item.agent = document.getElementById("agent").value;
-  item.benefit = document.getElementById("benefit").value;
-  item.category = document.getElementById("categorySelect").value;
-  item.role = document.getElementById("roleSelect").value;
-  item.effort = parseInt(document.getElementById("effort").value);
-  item.impactScore = parseInt(document.getElementById("impactScore").value);
+            // 🔁 RIPRISTINA ADD ENTRY
+            const addButton = document.querySelector(
+              "button[onclick='saveEdit()']",
+            );
+            addButton.textContent = "Add Entry";
+            addButton.onclick = addItem;
+          })
+          .catch(console.error);
 
-  db.collection("bottlenecks")
-    .doc(item.id)
-    .set(item, { merge: true })
-    .then(() => {
+        // document.getElementById("saveEditBtn").style.display = "none";
+      }
 
-      editingIndex = null;
+      function removeItem(index) {
+        const itemToDelete = items[index];
 
-      render();
-      clearForm();
-
-      // 🔁 RIPRISTINA ADD ENTRY
-      const addButton = document.querySelector("button[onclick='saveEdit()']");
-      addButton.textContent = "Add Entry";
-      addButton.onclick = addItem;
-
-    })
-    .catch(console.error);
-
-   // document.getElementById("saveEditBtn").style.display = "none";
-
-}
-
- 
-function removeItem(index) {
-  const itemToDelete = items[index];
-
-  if (confirm("Sei sicuro di voler eliminare questa entry dal database?")) {
-    db.collection("bottlenecks").doc(itemToDelete.id).delete()
-      .then(() => {
-        console.log("Eliminato da Firebase");
-        items.splice(index, 1); // rimuove dall'array
-        saveChanges();          // aggiorna mappa e priority matrix
-      })
-      .catch(error => {
-        console.error("Errore nella cancellazione:", error);
-        alert("Errore durante l'eliminazione.");
-      });
-  }
-}
+        if (
+          confirm("Sei sicuro di voler eliminare questa entry dal database?")
+        ) {
+          db.collection("bottlenecks")
+            .doc(itemToDelete.id)
+            .delete()
+            .then(() => {
+              console.log("Eliminato da Firebase");
+              items.splice(index, 1); // rimuove dall'array
+              saveChanges(); // aggiorna mappa e priority matrix
+            })
+            .catch((error) => {
+              console.error("Errore nella cancellazione:", error);
+              alert("Errore durante l'eliminazione.");
+            });
+        }
+      }
       function exportCSV() {
         let csv = "Process,Problem,Impact,Agent,Benefit,Category,Role\n";
         items.forEach((i) => {
