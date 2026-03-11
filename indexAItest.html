@@ -346,6 +346,11 @@ select {
 
       let items = []; // vuoto all’avvio
       let editingIndex = null;
+      // inizializza checkbox a non spuntata
+document.getElementById("reviewedByDeveloper").checked = false;
+
+// applica lo stato iniziale dei campi
+updateFieldAccess();
       const categories = [
         "Client Requests",
         "Manual Tool Work",
@@ -590,6 +595,7 @@ select {
         document.getElementById("process").focus();
         document.getElementById("roleSelect").value = item.role;
         updateEffortAccess(); // aggiorna lo stato di effort
+        updateFieldAccess(); // aggiorna lo stato dei campi secondo lo stato della checkbox
 
         const addButton = document.querySelector("button[onclick='addItem()']");
         addButton.textContent = "Save Changes";
@@ -676,7 +682,27 @@ select {
         document.getElementById("impactScore").value = 5;
         document.getElementById("categorySelect").selectedIndex = 0;
         document.getElementById("roleSelect").selectedIndex = 0;
+        document.getElementById("reviewedByDeveloper").checked = false;
+        updateFieldAccess(); // resetta i campi correttamente
+        
       }
+
+      function updateFieldAccess() {
+  const reviewed = document.getElementById("reviewedByDeveloper").checked;
+
+  // Lista di tutti i campi tranne effort
+  const fields = ["process", "problem", "impact", "agent", "benefit", "impactScore", "categorySelect", "roleSelect"];
+
+  fields.forEach(id => {
+    document.getElementById(id).disabled = reviewed; // read-only se checkbox spuntata
+  });
+
+  // Effort è l’unico abilitato se checkbox spuntata
+  document.getElementById("effort").disabled = !reviewed;
+}
+
+// Aggiorna subito quando la checkbox cambia
+document.getElementById("reviewedByDeveloper").addEventListener("change", updateFieldAccess);
 
       fetchItems();
     </script>
