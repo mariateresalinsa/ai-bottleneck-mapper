@@ -324,6 +324,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
+      // Configurazione del tuo progetto Firebase
       const firebaseConfig = {
         apiKey: "AIzaSyCd0rRTxyrRrZacqayNYFvAQbkGl-AwDQo",
         authDomain: "ai-bottleneck-mapper-b9a9c.firebaseapp.com",
@@ -334,39 +335,64 @@
         measurementId: "G-YQ03Y8JMDB",
       };
 
+      // Inizializza Firebase
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
     </script>
 
     <script>
+      //let items = []; // array globale dei bottleneck
+
       function fetchItems() {
         db.collection("bottlenecks")
           .orderBy("createdAt")
           .get()
           .then((querySnapshot) => {
-            items = [];
+            // === FALLBACK ===
+            if (querySnapshot.empty) {
+              console.log("Firestore vuoto, uso dati locali di esempio");
+              items = [
+                // qui assegni i dati direttamente all'array globale
+                {
+                  process: "Technical Documentation Review",
+                  problem: "Manual cross-check of .docx assessments",
+                  impact: "Time-consuming and error-prone",
+                  agent: "Doc Review AI",
+                  benefit: "Automates completeness checks",
+                  category: "Manual Tool Work",
+                  role: "Product Assessor",
+                  effort: 7,
+                  impactScore: 9,
+                },
+                {
+                  process: "Client Status Inquiry",
+                  problem: "Multiple employees answering same client questions",
+                  impact: "Delays response time",
+                  agent: "Status Inquiry Bot",
+                  benefit: "Fast, consistent replies",
+                  category: "Client Requests",
+                  role: "Project Manager",
+                  effort: 3,
+                  impactScore: 8,
+                },
+                // altri 3 esempi...
+              ];
+              render(); // aggiorna mappa e lista
+              return; // esci dalla funzione
+            }
+
+            // Se ci sono dati su Firebase, li carica normalmente
+            items = []; // svuota temporaneamente
             querySnapshot.forEach((doc) => {
               items.push(doc.data());
             });
-            render();
+            render(); // aggiorna lista e mappa
           })
           .catch((error) => console.error("Error fetching items: ", error));
       }
 
       // chiama all'avvio
       fetchItems();
-
-      function clearForm() {
-        document.getElementById("process").value = "";
-        document.getElementById("problem").value = "";
-        document.getElementById("impact").value = "";
-        document.getElementById("agent").value = "";
-        document.getElementById("benefit").value = "";
-        document.getElementById("effort").value = 5;
-        document.getElementById("impactScore").value = 5;
-        document.getElementById("categorySelect").selectedIndex = 0;
-        document.getElementById("roleSelect").selectedIndex = 0;
-      }
 
       let categories = [
         "Client Requests",
@@ -420,7 +446,7 @@
         const impact = document.getElementById("impact").value;
         const agent = document.getElementById("agent").value;
         const benefit = document.getElementById("benefit").value;
-        const category = categorySelect.value;
+        const category = document.getElementById("categorySelect").value;
         const role = document.getElementById("roleSelect").value;
         const effort = parseInt(document.getElementById("effort").value);
         const impactScore = parseInt(
@@ -431,6 +457,8 @@
           alert("Fill process and problem");
           return;
         }
+
+      
 
         const newItem = {
           process,
@@ -448,12 +476,34 @@
         db.collection("bottlenecks")
           .add(newItem)
           .then(() => {
-            alert("Entry saved successfully!");
-            clearForm();
-            fetchItems(); // aggiorna lista e mappa
+            items.push(newItem); // aggiorna **localmente** subito
+            render(); // aggiorna lista e mappa
+            clearForm(); // pulisce il form
           })
           .catch((error) => console.error("Error saving item: ", error));
       }
+      function addItem() {
+  const newItem = {
+    process: document.getElementById("process").value,
+    problem: document.getElementById("problem").value,
+    impact: document.getElementById("impact").value,
+    agent: document.getElementById("agent").value,
+    benefit: document.getElementById("benefit").value,
+    category: document.getElementById("categorySelect").value,
+    role: document.getElementById("roleSelect").value,
+    effort: parseInt(document.getElementById("effort").value),
+    impactScore: parseInt(document.getElementById("impactScore").value),
+    createdAt: new Date(),
+  };
+
+  db.collection("bottlenecks").add(newItem)
+    .then(() => {
+      items.push(newItem); // aggiorna anche localmente subito
+      render();             // aggiorna lista e mappa
+      clearForm();          // pulisce il form
+    })
+    .catch(error => console.error("Error saving item: ", error));
+}
 
       function render() {
         const list = document.getElementById("list");
@@ -541,10 +591,10 @@
         document.getElementById("impact").value = "";
         document.getElementById("agent").value = "";
         document.getElementById("benefit").value = "";
-        document.getElementById("effort").value = 5; // ripristina valore di default
-        document.getElementById("impactScore").value = 5; // ripristina valore di default
-        document.getElementById("categorySelect").selectedIndex = 0; // primo elemento
-        document.getElementById("roleSelect").selectedIndex = 0; // primo elemento
+        document.getElementById("effort").value = 5;
+        document.getElementById("impactScore").value = 5;
+        document.getElementById("categorySelect").selectedIndex = 0;
+        document.getElementById("roleSelect").selectedIndex = 0;
       }
 
       render();
