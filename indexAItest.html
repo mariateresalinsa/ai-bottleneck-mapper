@@ -242,8 +242,9 @@
               <option>Project Manager</option>
             </select>
             <button onclick="addItem()">Add Entry</button>
-            <button class="secondary" onclick="exportCSV()">Export CSV</button>
-            <button class="secondary" onclick="clearForm()">Clear Form</button>
+<button onclick="saveEdit()" id="saveEditBtn" style="display:none;">Save Edit</button>
+<button class="secondary" onclick="exportCSV()">Export CSV</button>
+<button class="secondary" onclick="clearForm()">Clear Form</button>
           </div>
         </div>
       </div>
@@ -303,6 +304,7 @@
       const db = firebase.firestore();
 
       let items = []; // vuoto all’avvio
+      let editingIndex = null;
       const categories = [
         "Client Requests",
         "Manual Tool Work",
@@ -453,13 +455,16 @@ function addItem() {
       // Lista Bottleneck
       const div = document.createElement("div");
       div.className = "list-item";
-      div.innerHTML = `<strong>${i.process}</strong><span class="tag">${i.category}</span>
+div.innerHTML = `<strong>${i.process}</strong><span class="tag">${i.category}</span>
 <p><b>Role:</b> ${i.role}</p>
 <p><b>Problem:</b> ${i.problem}</p>
 <p><b>Impact:</b> ${i.impact}</p>
 <p><b>AI Agent:</b> ${i.agent}</p>
 <p><b>Benefit:</b> ${i.benefit}</p>
+<button onclick="editItem(${index})">Edit</button>
 <button onclick="removeItem(${index})">Delete</button>`;
+
+
       list.appendChild(div);
 
       // AI Opportunity Map
@@ -495,6 +500,70 @@ function addItem() {
   document.getElementById("s2").innerText = count["Manual Tool Work"] || 0;
   document.getElementById("s3").innerText = count["Internal Knowledge"] || 0;
   document.getElementById("s4").innerText = count["Other"] || 0;
+}
+
+
+ 
+function editItem(index) {
+  const item = items[index];
+  editingIndex = index;
+
+  document.getElementById("process").value = item.process;
+  document.getElementById("problem").value = item.problem;
+  document.getElementById("impact").value = item.impact;
+  document.getElementById("agent").value = item.agent;
+  document.getElementById("benefit").value = item.benefit;
+  document.getElementById("effort").value = item.effort;
+  document.getElementById("impactScore").value = item.impactScore;
+  document.getElementById("categorySelect").value = item.category;
+  document.getElementById("roleSelect").value = item.role;
+
+    document.getElementById("saveEditBtn").style.display = "inline-block";
+    document.getElementById("process").scrollIntoView({behavior:"smooth"});
+    document.getElementById("process").focus();
+
+  const addButton = document.querySelector("button[onclick='addItem()']");
+  addButton.textContent = "Save Changes";
+  addButton.onclick = saveEdit;
+  
+}
+
+function saveEdit() {
+
+  if (editingIndex === null) return;
+
+  const item = items[editingIndex];
+
+  item.process = document.getElementById("process").value;
+  item.problem = document.getElementById("problem").value;
+  item.impact = document.getElementById("impact").value;
+  item.agent = document.getElementById("agent").value;
+  item.benefit = document.getElementById("benefit").value;
+  item.category = document.getElementById("categorySelect").value;
+  item.role = document.getElementById("roleSelect").value;
+  item.effort = parseInt(document.getElementById("effort").value);
+  item.impactScore = parseInt(document.getElementById("impactScore").value);
+
+  db.collection("bottlenecks")
+    .doc(item.id)
+    .set(item, { merge: true })
+    .then(() => {
+
+      editingIndex = null;
+
+      render();
+      clearForm();
+
+      // 🔁 RIPRISTINA ADD ENTRY
+      const addButton = document.querySelector("button[onclick='saveEdit()']");
+      addButton.textContent = "Add Entry";
+      addButton.onclick = addItem;
+
+    })
+    .catch(console.error);
+
+   // document.getElementById("saveEditBtn").style.display = "none";
+
 }
 
  
