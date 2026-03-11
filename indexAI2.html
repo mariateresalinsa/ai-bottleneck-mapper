@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Bottleneck & Agent Mapper - Instructions</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;margin:0;padding:20px}
+h1,h2,h3{color:#111827}
+.container{max-width:900px;margin:auto;background:white;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+p{margin:12px 0}
+ul{margin:8px 0 12px 20px}
+.code{background:#f3f4f6;padding:4px 8px;border-radius:6px;font-family:monospace}
+.tooltip{font-size:12px;color:#555;margin-top:-4px;margin-bottom:8px}
+button{background:#2563eb;color:white;border:none;padding:10px 16px;border-radius:8px;font-size:14px;cursor:pointer;margin-top:12px}
+button:hover{background:#1d4ed8}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>AI Bottleneck & Agent Mapper - Instructions</h1>
+<p>Questo tool nasce per supportare un progetto di creazione di AI agent per velocizzare processi o azioni ripetitive che i clienti richiedono frequentemente. L'obiettivo è <b>radunare tutte le idee, identificare i colli di bottiglia e descrivere dove l'AI può intervenire</b>. Ad esempio, nel contesto di NV Belgium, molti processi ricorrenti richiedono continuamente le stesse informazioni dai clienti, e il team vuole capire come automatizzarli.</p>
+
+<h2>1️⃣ Inserimento delle idee</h2>
+<ul>
+<li><b>Process:</b> Nome del processo (es. <span class="code">Technical Documentation Review</span>).</li>
+<li><b>Problem:</b> Descrizione della difficoltà o del collo di bottiglia.</li>
+<li><b>Impact:</b> Conseguenze se il problema non viene risolto (es. ritardi, errori, tempo perso).</li>
+<li><b>Effort (1-10):</b> Quanto lavoro ci vuole per risolverlo o implementare l'AI agent. <span class="tooltip">Consigliato: valutato dal team lead o da un gruppo di riferimento per uniformità.</span></li>
+<li><b>Impact Score (1-10):</b> Beneficio atteso risolvendo il problema. <span class="tooltip">Consigliato: valutato dal team lead o da un gruppo di riferimento per uniformità.</span></li>
+<li><b>AI Agent Idea:</b> Nome o idea dell'agente AI che può risolvere il problema.</li>
+<li><b>Expected Benefit:</b> Cosa migliorerà (es. automazione, riduzione errori, velocità, qualità).</li>
+<li><b>Category:</b> Area di appartenenza, esistente o nuova da creare.</li>
+</ul>
+
+<h2>2️⃣ Chi inserisce i dati?</h2>
+<p>Ogni membro del team può proporre un bottleneck e suggerire un AI agent. L'idea può venire da chi lavora direttamente sul processo o da chi supporta gli utenti. L'importante è raccogliere tutte le informazioni utili per identificare i colli di bottiglia.</p>
+
+<h2>3️⃣ Chi valuta Effort e Impact?</h2>
+<p>Per uniformità, è consigliato che il team lead o un piccolo gruppo di riferimento valuti i punteggi Effort e Impact. Se più persone compilano, si può fare un rapido consenso tra i membri del team.</p>
+
+<h2>4️⃣ Visualizzazione</h2>
+<ul>
+<li><b>AI Opportunity Map:</b> Mostra tutte le idee raggruppate per categoria.</li>
+<li><b>AI Priority Matrix:</b> Divide le idee in 4 quadranti in base a Effort e Impact.</li>
+<li><b>Bottleneck Database:</b> Elenco completo delle idee, con ricerca e filtraggio.</li>
+</ul>
+
+<h2>5️⃣ Multi-utente</h2>
+<p>Tutti i dati vengono salvati su Firebase Realtime Database. Ogni modifica viene aggiornata in tempo reale per tutti i membri del team.</p>
+
+<h2>6️⃣ Esportazione</h2>
+<p>È possibile esportare tutte le voci in CSV usando il pulsante <span class="code">Export CSV</span>.</p>
+
+<p>Per passare dal manuale al tool reale:</p>
+<button onclick="window.location.href='indexAI.html'">Apri il Tool</button>
+
+
+<p>Questa pagina serve come riferimento per capire chi fa cosa, chi valuta i punteggi e come raccogliere e organizzare le idee per l'automazione AI.</p>
+</div>
+</body>
+</html>
