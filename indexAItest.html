@@ -161,35 +161,34 @@
       }
 
       /* CSS aggiornato per checkbox */
-.checkbox-container {
-  display: flex;         /* mette checkbox e testo sulla stessa riga */
-  align-items: center;   /* allinea verticalmente */
-  gap: 8px;              /* spazio tra quadrato e testo */
-  margin-bottom: 14px;   /* come gli altri input */
-  font-size: 14px;
-}
+      .checkbox-container {
+        display: flex; /* mette checkbox e testo sulla stessa riga */
+        align-items: center; /* allinea verticalmente */
+        gap: 8px; /* spazio tra quadrato e testo */
+        margin-bottom: 14px; /* come gli altri input */
+        font-size: 14px;
+      }
 
-.checkbox-container input[type="checkbox"] {
-  width: 16px;           /* dimensione quadrato */
-  height: 16px;
-  flex-shrink: 0;        /* evita che il quadrato si riduca */
-  cursor: pointer;
-}
+      .checkbox-container input[type="checkbox"] {
+        width: 16px; /* dimensione quadrato */
+        height: 16px;
+        flex-shrink: 0; /* evita che il quadrato si riduca */
+        cursor: pointer;
+      }
 
-/* Modifica input globali per escludere checkbox */
-input[type="text"],
-input[type="number"],
-textarea,
-select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  margin-bottom: 14px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-}
-
+      /* Modifica input globali per escludere checkbox */
+      input[type="text"],
+      input[type="number"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        margin-bottom: 14px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        font-size: 14px;
+      }
     </style>
   </head>
   <body>
@@ -244,12 +243,11 @@ select {
             <div class="tooltip">
               1 = very low effort, 10 = very high effort
             </div>
-            
-   <div class="checkbox-container">
-      <input type="checkbox" id="reviewedByDeveloper" />
-      <span>Reviewed by Development Team</span>
-    </div>
 
+            <div class="checkbox-container">
+              <input type="checkbox" id="reviewedByDeveloper" />
+              <span>Reviewed by Development Team</span>
+            </div>
 
             <label>Impact Score (1-10)</label
             ><input id="impactScore" type="number" min="1" max="10" value="5" />
@@ -278,13 +276,12 @@ select {
               <option>Auditor</option>
               <option>Lead Auditor</option>
               <option>Project Manager</option>
-              
             </select>
             <button onclick="addItem()">Add Entry</button>
             <button onclick="saveEdit()" id="saveEditBtn" style="display: none">
               Save Edit
             </button>
-            <button class="secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="secondary" onclick="exportCSV()">Export Excel</button>
             <button class="secondary" onclick="clearForm()">Clear Form</button>
           </div>
         </div>
@@ -331,6 +328,7 @@ select {
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyCd0rRTxyrRrZacqayNYFvAQbkGl-AwDQo",
@@ -347,10 +345,10 @@ select {
       let items = []; // vuoto all’avvio
       let editingIndex = null;
       // inizializza checkbox a non spuntata
-document.getElementById("reviewedByDeveloper").checked = false;
+      document.getElementById("reviewedByDeveloper").checked = false;
 
-// applica lo stato iniziale dei campi
-updateFieldAccess();
+      // applica lo stato iniziale dei campi
+      updateFieldAccess();
       const categories = [
         "Client Requests",
         "Manual Tool Work",
@@ -661,16 +659,25 @@ updateFieldAccess();
         }
       }
       function exportCSV() {
-        let csv = "Process,Problem,Impact,Agent,Benefit,Category,Role\n";
-        items.forEach((i) => {
-          csv += `"${i.process}","${i.problem}","${i.impact}","${i.agent}","${i.benefit}","${i.category}","${i.role}"\n`;
-        });
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "ai_bottlenecks.csv";
-        a.click();
+        const data = items.map((i) => ({
+          Process: i.process,
+          Problem: i.problem,
+          Impact: i.impact,
+          "AI Agent": i.agent,
+          Benefit: i.benefit,
+          Category: i.category,
+          Role: i.role,
+          Effort: i.effort,
+          ImpactScore: i.impactScore,
+          CreatedAt: i.createdAt,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Bottlenecks");
+
+        XLSX.writeFile(workbook, "AI_Bottleneck_Database.xlsx");
       }
       function clearForm() {
         document.getElementById("process").value = "";
@@ -684,25 +691,35 @@ updateFieldAccess();
         document.getElementById("roleSelect").selectedIndex = 0;
         document.getElementById("reviewedByDeveloper").checked = false;
         updateFieldAccess(); // resetta i campi correttamente
-        
       }
 
       function updateFieldAccess() {
-  const reviewed = document.getElementById("reviewedByDeveloper").checked;
+        const reviewed = document.getElementById("reviewedByDeveloper").checked;
 
-  // Lista di tutti i campi tranne effort
-  const fields = ["process", "problem", "impact", "agent", "benefit", "impactScore", "categorySelect", "roleSelect"];
+        // Lista di tutti i campi tranne effort
+        const fields = [
+          "process",
+          "problem",
+          "impact",
+          "agent",
+          "benefit",
+          "impactScore",
+          "categorySelect",
+          "roleSelect",
+        ];
 
-  fields.forEach(id => {
-    document.getElementById(id).disabled = reviewed; // read-only se checkbox spuntata
-  });
+        fields.forEach((id) => {
+          document.getElementById(id).disabled = reviewed; // read-only se checkbox spuntata
+        });
 
-  // Effort è l’unico abilitato se checkbox spuntata
-  document.getElementById("effort").disabled = !reviewed;
-}
+        // Effort è l’unico abilitato se checkbox spuntata
+        document.getElementById("effort").disabled = !reviewed;
+      }
 
-// Aggiorna subito quando la checkbox cambia
-document.getElementById("reviewedByDeveloper").addEventListener("change", updateFieldAccess);
+      // Aggiorna subito quando la checkbox cambia
+      document
+        .getElementById("reviewedByDeveloper")
+        .addEventListener("change", updateFieldAccess);
 
       fetchItems();
     </script>
