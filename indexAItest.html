@@ -595,6 +595,9 @@
 <p><b>Effort:</b> ${i.effort}</p>
 <p><b>Impact Score:</b> ${i.impactScore}</p>
 
+${i.frequentQuestion ? `<p><b>Frequent Question:</b> ${i.frequentQuestion}</p>` : ""}
+${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
+
 <p style="
     background:${color};
     padding:6px 8px;
@@ -609,6 +612,7 @@
 
 <button onclick="editItem('${i.id}')">Edit</button>
 <button onclick="removeItem('${i.id}')">Delete</button>`;
+
 
           list.appendChild(div);
 
@@ -671,6 +675,15 @@
 
         updateEffortAccess();
         updateFieldAccess();
+
+        updateEffortAccess();
+        updateFieldAccess();
+
+        setTimeout(() => {
+          const el = document.getElementById("process");
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+        }, 100);
 
         const addButton = document.querySelector("button[onclick='addItem()']");
         addButton.textContent = "Save Changes";
