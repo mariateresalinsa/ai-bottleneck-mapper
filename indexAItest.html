@@ -6,6 +6,16 @@
     <title>Bottlenecks Collector & AI Agent Mapper</title>
     <link rel="icon" type="image/png" href="favicon.png" />
     <style>
+      /* Optional: per rendere più carina la navbar */
+      nav a {
+        text-decoration: none;
+        color: #333;
+        font-weight: bold;
+      }
+      nav a:hover {
+        color: #007bff;
+      }
+
       body {
         font-family: Arial, Helvetica, sans-serif;
         background: #f3f4f6;
@@ -100,31 +110,57 @@
       .stat h2 {
         margin: 8px 0;
       }
-      .map {
+      /* .map {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 24px;
         margin-top: 16px;
-      }
-      .map-col {
+      } */
+      /* .map-col {
         background: #f9fafb;
         border-radius: 10px;
         padding: 16px;
         min-height: 120px;
+      } */
+      .map {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fit,
+          minmax(250px, 1fr)
+        ); /* colonne più larghe */
+        gap: 24px;
+        margin-top: 16px;
+      }
+
+      .map-col {
+        background: #f0f4ff; /* più chiaro, contrasto migliore */
+        border-radius: 12px;
+        padding: 20px;
+        min-height: 180px; /* più alta */
+      }
+
+      .node {
+        background: #2563eb; /* blu forte */
+        color: white;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       }
       .map-col h3 {
         margin-top: 0;
         font-size: 16px;
         margin-bottom: 10px;
       }
-      .node {
+      /* .node {
         background: white;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 10px;
         margin-bottom: 10px;
         font-size: 13px;
-      }
+      } */
       .node strong {
         display: block;
         margin-bottom: 2px;
@@ -141,19 +177,43 @@
         text-align: center;
         margin-bottom: 14px;
       }
-      .matrix {
+      /* .matrix {
         display: grid;
         grid-template-columns: 2fr 2fr;
         grid-template-rows: 2fr 2fr;
         text-align: center;
         gap: 14px;
+      } */
+      .matrix {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 16px;
+        text-align: center;
       }
+
       .cell {
+        padding: 30px;
+        border-radius: 12px;
+        font-size: 14px;
+        background: #f9fafb;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      .cell div.node {
+        background: #2563eb;
+        color: white;
+        margin: 6px 0;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      /* .cell {
         padding: 24px;
         border: 1px solid #d1d5db;
         border-radius: 8px;
         font-size: 14px;
-      }
+      } */
       .tooltip {
         font-size: 12px;
         color: #555;
@@ -200,10 +260,47 @@
         display: block; /* forza bottone su nuova riga */
         margin: 8px 0 14px 0; /* spazio verticale */
       }
+      #backToTop {
+        display: none; /* nascosto inizialmente */
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 99;
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 50%;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        transition: background 0.3s;
+      }
+
+      #backToTop:hover {
+        background: #1d4ed8;
+      }
+      /* Hover per i nodi cliccabili */
+.node {
+  cursor: pointer; /* indica che è cliccabile */
+  transition: background 0.2s, transform 0.2s;
+}
+
+.node:hover {
+  background: #e0e7ff; /* colore chiaro di evidenza, elegante */
+  transform: translateY(-2px); /* leggero sollevamento */
+}
     </style>
   </head>
   <body>
+    <button id="backToTop" title="Go to top">↑ Top</button>
     <header>
+      <nav class="navbar">
+        <a href="#addBottleneck">Add Bottleneck</a>
+        <a href="#aiMap">AI Opportunity Map</a>
+        <a href="#priorityMatrix">AI Priority Matrix</a>
+        <a href="#bottleneckDB">Bottleneck Database</a>
+      </nav>
       <h1>Bottlenecks Collector & AI Agent Mapper</h1>
       <p>
         Capture internal inefficiencies and identify AI automation opportunities
@@ -233,7 +330,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="addBottleneck">
         <h2>Add Bottleneck</h2>
         <div class="grid">
           <div>
@@ -310,12 +407,12 @@
             <select id="roleSelect"></select>
 
             <!-- <button onclick="addItem()">Add Entry</button> -->
-            
+
             <button id="saveEditBtn" style="display: none" onclick="saveEdit()">
               Save Changes
             </button>
             <button onclick="addItem()" id="addEntryBtn">Add Entry</button>
-            
+
             <!-- <button onclick="saveEdit()" id="saveEditBtn" style="display: none">
               Save Edit
             </button> -->
@@ -327,12 +424,12 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="aiMap">
         <h2>AI Opportunity Map</h2>
         <div id="mapContainer" class="map"></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="priorityMatrix">
         <h2>AI Priority Matrix</h2>
         <p>Prioritize AI opportunities by impact vs effort.</p>
         <div class="priority-map">
@@ -354,7 +451,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="bottleneckDB">
         <h2>Bottleneck Database</h2>
         <div style="display: flex; gap: 12px; margin-bottom: 10px"></div>
         <select id="sortSelect" onchange="render()">
@@ -665,15 +762,34 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
           list.appendChild(div);
 
           // AI Opportunity Map
-          const node = document.createElement("div");
-          node.className = "node";
-          node.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong>${i.process} (${i.role})`;
-          document
-            .getElementById("map-" + i.category.replace(/\s/g, ""))
-            .appendChild(node);
+          // const node = document.createElement("div");
+          // node.className = "node";
+          // node.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong>${i.process} (${i.role})`;
+          // document
+          //   .getElementById("map-" + i.category.replace(/\s/g, ""))
+          //   .appendChild(node);
+
+
+            const nodeDiv = document.createElement("div");
+nodeDiv.className = "node";
+nodeDiv.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong> ${i.process} (${i.role})`;
+
+// assegniamo l'ID dell'item
+nodeDiv.dataset.id = i.id;
+
+// listener click: scrolla al record nel DB senza edit
+nodeDiv.addEventListener("click", () => {
+  const listItem = [...document.querySelectorAll("#list .list-item")]
+    .find(div => div.querySelector("button").getAttribute("onclick").includes(i.id));
+  if(listItem) {
+    listItem.scrollIntoView({ behavior: "smooth", block: "center" });
+    highlightElement(listItem);
+  }
+});
+document.getElementById("map-" + i.category.replace(/\s/g, "")).appendChild(nodeDiv);
 
           // Aggiorna contatori categoria
-          count[i.category]++;
+         count[i.category]++;
 
           // Priority Matrix
           const e = i.effort,
@@ -690,7 +806,41 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
           else if (e > 5 && imp > 5)
             document.getElementById("high-effort-high-impact").innerHTML +=
               `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
-        });
+        
+            });
+
+// Priority Matrix
+const e = i.effort, imp = i.impactScore;
+
+let matrixCellId = "";
+if (e <= 5 && imp <= 5) matrixCellId = "low-effort-low-impact";
+else if (e > 5 && imp <= 5) matrixCellId = "high-effort-low-impact";
+else if (e <= 5 && imp > 5) matrixCellId = "low-effort-high-impact";
+else matrixCellId = "high-effort-high-impact";
+
+const cell = document.getElementById(matrixCellId);
+
+// crea nodo cliccabile
+const nodeDiv = document.createElement("div");
+nodeDiv.className = "node";
+nodeDiv.innerHTML = `<strong>${i.agent}</strong> ${i.process} (${i.role})`;
+nodeDiv.dataset.id = i.id;
+
+// click scrolla al record nel DB
+nodeDiv.addEventListener("click", () => {
+  const listItem = [...document.querySelectorAll("#list .list-item")]
+    .find(div => div.querySelector("button").getAttribute("onclick").includes(i.id));
+  if (listItem) {
+    listItem.scrollIntoView({ behavior: "smooth", block: "center" });
+    highlightElement(listItem);
+  }
+});
+
+cell.appendChild(nodeDiv);
+
+
+
+
 
         // Aggiorna contatori
         document.getElementById("total").innerText = items.length;
@@ -729,16 +879,14 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           el.focus();
         }, 100);
-          // Mostra solo il pulsante Save Edit
-  document.getElementById("saveEditBtn").style.display = "inline-block";
-}
+        // Mostra solo il pulsante Save Edit
+        document.getElementById("saveEditBtn").style.display = "inline-block";
+      }
 
-        // const addButton = document.querySelector("button[onclick='addItem()']");
-        // addButton.textContent = "Save Changes";
-        // addButton.onclick = saveEdit;
+      // const addButton = document.querySelector("button[onclick='addItem()']");
+      // addButton.textContent = "Save Changes";
+      // addButton.onclick = saveEdit;
       //}
-
-  
 
       function saveEdit() {
         if (editingIndex === null) return;
@@ -773,7 +921,6 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
             clearForm();
             document.getElementById("saveEditBtn").style.display = "none"; // nasconde solo Save Edit
 
-
             // 🔁 RIPRISTINA ADD ENTRY
             // //const addButton = document.querySelector(
             //   "button[onclick='saveEdit()']",
@@ -796,7 +943,6 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
             }, 200); // piccolo delay per far finire il render
           })
           .catch(console.error);
-
       }
 
       function removeItem(id) {
@@ -897,16 +1043,37 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
         .getElementById("reviewedByDeveloper")
         .addEventListener("change", updateFieldAccess);
 
-        // Imposta stato iniziale dei bottoni
-document.getElementById("addEntryBtn").style.display = "inline-block";
-document.getElementById("saveEditBtn").style.display = "none";
+      // Imposta stato iniziale dei bottoni
+      document.getElementById("addEntryBtn").style.display = "inline-block";
+      document.getElementById("saveEditBtn").style.display = "none";
 
-// Carica dati dal DB e popola ruoli
-fetchItems();
-populateRoles();
+      // Carica dati dal DB e popola ruoli
+      fetchItems();
+      populateRoles();
 
       fetchItems();
       populateRoles();
+
+      document.querySelectorAll(".navbar a").forEach((a) => {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+      const backBtn = document.getElementById("backToTop");
+
+      window.onscroll = () => {
+        backBtn.style.display =
+          document.body.scrollTop > 300 ||
+          document.documentElement.scrollTop > 300
+            ? "block"
+            : "none";
+      };
+
+      backBtn.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
     </script>
   </body>
 </html>
