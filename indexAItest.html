@@ -309,10 +309,16 @@
 
             <select id="roleSelect"></select>
 
-            <button onclick="addItem()">Add Entry</button>
-            <button onclick="saveEdit()" id="saveEditBtn" style="display: none">
-              Save Edit
+            <!-- <button onclick="addItem()">Add Entry</button> -->
+            
+            <button id="saveEditBtn" style="display: none" onclick="saveEdit()">
+              Save Changes
             </button>
+            <button onclick="addItem()" id="addEntryBtn">Add Entry</button>
+            
+            <!-- <button onclick="saveEdit()" id="saveEditBtn" style="display: none">
+              Save Edit
+            </button> -->
             <button class="secondary" onclick="exportCSV()">
               Export Excel
             </button>
@@ -718,19 +724,21 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
         updateEffortAccess();
         updateFieldAccess();
 
-        updateEffortAccess();
-        updateFieldAccess();
-
         setTimeout(() => {
           const el = document.getElementById("process");
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           el.focus();
         }, 100);
+          // Mostra solo il pulsante Save Edit
+  document.getElementById("saveEditBtn").style.display = "inline-block";
+}
 
-        const addButton = document.querySelector("button[onclick='addItem()']");
-        addButton.textContent = "Save Changes";
-        addButton.onclick = saveEdit;
-      }
+        // const addButton = document.querySelector("button[onclick='addItem()']");
+        // addButton.textContent = "Save Changes";
+        // addButton.onclick = saveEdit;
+      //}
+
+  
 
       function saveEdit() {
         if (editingIndex === null) return;
@@ -763,13 +771,15 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
 
             render();
             clearForm();
+            document.getElementById("saveEditBtn").style.display = "none"; // nasconde solo Save Edit
+
 
             // 🔁 RIPRISTINA ADD ENTRY
-            const addButton = document.querySelector(
-              "button[onclick='saveEdit()']",
-            );
-            addButton.textContent = "Add Entry";
-            addButton.onclick = addItem;
+            // //const addButton = document.querySelector(
+            //   "button[onclick='saveEdit()']",
+            // );
+            // addButton.textContent = "Add Entry";
+            // addButton.onclick = addItem;
 
             // --- NUOVO: scroll alla entry aggiornata ---
             setTimeout(() => {
@@ -787,7 +797,6 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
           })
           .catch(console.error);
 
-        // document.getElementById("saveEditBtn").style.display = "none";
       }
 
       function removeItem(id) {
@@ -887,6 +896,14 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
       document
         .getElementById("reviewedByDeveloper")
         .addEventListener("change", updateFieldAccess);
+
+        // Imposta stato iniziale dei bottoni
+document.getElementById("addEntryBtn").style.display = "inline-block";
+document.getElementById("saveEditBtn").style.display = "none";
+
+// Carica dati dal DB e popola ruoli
+fetchItems();
+populateRoles();
 
       fetchItems();
       populateRoles();
