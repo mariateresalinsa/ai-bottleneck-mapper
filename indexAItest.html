@@ -281,15 +281,17 @@
         background: #1d4ed8;
       }
       /* Hover per i nodi cliccabili */
-.node {
-  cursor: pointer; /* indica che è cliccabile */
-  transition: background 0.2s, transform 0.2s;
-}
+      .node {
+        cursor: pointer; /* indica che è cliccabile */
+        transition:
+          background 0.2s,
+          transform 0.2s;
+      }
 
-.node:hover {
-  background: #e0e7ff; /* colore chiaro di evidenza, elegante */
-  transform: translateY(-2px); /* leggero sollevamento */
-}
+      .node:hover {
+        background: #e0e7ff; /* colore chiaro di evidenza, elegante */
+        transform: translateY(-2px); /* leggero sollevamento */
+      }
     </style>
   </head>
   <body>
@@ -372,7 +374,13 @@
               <input type="checkbox" id="reviewedByDeveloper" />
               <span>Reviewed by Development Team</span>
             </div>
-
+            <div id="developerNotesContainer" style="display: none">
+              <label>Developer Notes</label>
+              <textarea
+                id="developerNotes"
+                placeholder="Add internal technical notes, assumptions, or implementation hints..."
+              ></textarea>
+            </div>
             <label>Impact Score (1-10)</label
             ><input id="impactScore" type="number" min="1" max="10" value="5" />
             <div class="tooltip">
@@ -564,8 +572,6 @@
           .catch(console.error);
       }
 
-      
-
       function updateEffortAccess() {
         const role = document.getElementById("roleSelect").value;
         const effortInput = document.getElementById("effort");
@@ -625,6 +631,7 @@
           priorityScore: parseFloat((impactScore / effort).toFixed(2)),
           frequentQuestion: document.getElementById("frequentQuestion").value,
           response: document.getElementById("response").value,
+          developerNotes: document.getElementById("developerNotes").value,
           createdAt: new Date(),
         };
 
@@ -636,26 +643,33 @@
         db.collection("bottlenecks")
           .add(newItem)
           .then((docRef) => {
-  newItem.id = docRef.id;
-  items.push(newItem);
-  render();
+            newItem.id = docRef.id;
+            items.push(newItem);
+            render();
 
-  // Punta al nuovo record nella lista
-  setTimeout(() => {
-    const listItem = [...document.querySelectorAll("#list .list-item")].find(
-      div => div.querySelector("button").getAttribute("onclick").includes(newItem.id)
-    );
-    if (listItem) {
-      listItem.scrollIntoView({ behavior: "smooth", block: "center" });
-      highlightElement(listItem);
-    }
+            // Punta al nuovo record nella lista
+            setTimeout(() => {
+              const listItem = [
+                ...document.querySelectorAll("#list .list-item"),
+              ].find((div) =>
+                div
+                  .querySelector("button")
+                  .getAttribute("onclick")
+                  .includes(newItem.id),
+              );
+              if (listItem) {
+                listItem.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                highlightElement(listItem);
+              }
 
-    // Metti il focus sul campo process
-    const processInput = document.getElementById("process");
-    processInput.focus();
-  }, 100);
-})
-        
+              // Metti il focus sul campo process
+              const processInput = document.getElementById("process");
+              processInput.focus();
+            }, 100);
+          });
       }
 
       function addMapColumns() {
@@ -669,7 +683,7 @@
           container.appendChild(div);
         });
       }
-//render function
+      //render function
       function render() {
         const list = document.getElementById("list");
         const search = document.getElementById("search").value.toLowerCase();
@@ -761,8 +775,7 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
 
 <button onclick="editItem('${i.id}')">Edit</button>
 <button data-id="${i.id}" class="delete-btn">Delete</button>
-`
-;
+`;
 
           list.appendChild(div);
 
@@ -774,27 +787,34 @@ ${i.response ? `<p><b>Response:</b> ${i.response}</p>` : ""}
           //   .getElementById("map-" + i.category.replace(/\s/g, ""))
           //   .appendChild(node);
 
+          const nodeDiv = document.createElement("div");
+          nodeDiv.className = "node";
+          nodeDiv.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong> ${i.process} (${i.role})`;
 
-            const nodeDiv = document.createElement("div");
-nodeDiv.className = "node";
-nodeDiv.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong> ${i.process} (${i.role})`;
+          // assegniamo l'ID dell'item
+          nodeDiv.dataset.id = i.id;
 
-// assegniamo l'ID dell'item
-nodeDiv.dataset.id = i.id;
-
-// listener click: scrolla al record nel DB senza edit
-nodeDiv.addEventListener("click", () => {
-  const listItem = [...document.querySelectorAll("#list .list-item")]
-    .find(div => div.querySelector("button").getAttribute("onclick").includes(i.id));
-  if(listItem) {
-    listItem.scrollIntoView({ behavior: "smooth", block: "center" });
-    highlightElement(listItem);
-  }
-});
-document.getElementById("map-" + i.category.replace(/\s/g, "")).appendChild(nodeDiv);
+          // listener click: scrolla al record nel DB senza edit
+          nodeDiv.addEventListener("click", () => {
+            const listItem = [
+              ...document.querySelectorAll("#list .list-item"),
+            ].find((div) =>
+              div
+                .querySelector("button")
+                .getAttribute("onclick")
+                .includes(i.id),
+            );
+            if (listItem) {
+              listItem.scrollIntoView({ behavior: "smooth", block: "center" });
+              highlightElement(listItem);
+            }
+          });
+          document
+            .getElementById("map-" + i.category.replace(/\s/g, ""))
+            .appendChild(nodeDiv);
 
           // Aggiorna contatori categoria
-         count[i.category]++;
+          count[i.category]++;
 
           // Priority Matrix
           const e = i.effort,
@@ -811,38 +831,40 @@ document.getElementById("map-" + i.category.replace(/\s/g, "")).appendChild(node
           else if (e > 5 && imp > 5)
             document.getElementById("high-effort-high-impact").innerHTML +=
               `<div class='node'><strong>${i.agent}</strong>${i.process} (${i.role})</div>`;
-        
-            });
+        });
 
-// Priority Matrix
-const e = i.effort, imp = i.impactScore;
+        // Priority Matrix
+        const e = i.effort,
+          imp = i.impactScore;
 
-let matrixCellId = "";
-if (e <= 5 && imp <= 5) matrixCellId = "low-effort-low-impact";
-else if (e > 5 && imp <= 5) matrixCellId = "high-effort-low-impact";
-else if (e <= 5 && imp > 5) matrixCellId = "low-effort-high-impact";
-else matrixCellId = "high-effort-high-impact";
+        let matrixCellId = "";
+        if (e <= 5 && imp <= 5) matrixCellId = "low-effort-low-impact";
+        else if (e > 5 && imp <= 5) matrixCellId = "high-effort-low-impact";
+        else if (e <= 5 && imp > 5) matrixCellId = "low-effort-high-impact";
+        else matrixCellId = "high-effort-high-impact";
 
-const cell = document.getElementById(matrixCellId);
+        const cell = document.getElementById(matrixCellId);
 
-// crea nodo cliccabile
-const nodeDiv = document.createElement("div");
-nodeDiv.className = "node";
-nodeDiv.innerHTML = `<strong>${i.agent}</strong> ${i.process} (${i.role})`;
-nodeDiv.dataset.id = i.id;
+        // crea nodo cliccabile
+        const nodeDiv = document.createElement("div");
+        nodeDiv.className = "node";
+        nodeDiv.innerHTML = `<strong>${i.agent}</strong> ${i.process} (${i.role})`;
+        nodeDiv.dataset.id = i.id;
 
-// click scrolla al record nel DB
-nodeDiv.addEventListener("click", () => {
-  const listItem = [...document.querySelectorAll("#list .list-item")]
-    .find(div => div.querySelector("button").getAttribute("onclick").includes(i.id));
-  if (listItem) {
-    listItem.scrollIntoView({ behavior: "smooth", block: "center" });
-    highlightElement(listItem);
-  }
-});
+        // click scrolla al record nel DB
+        nodeDiv.addEventListener("click", () => {
+          const listItem = [
+            ...document.querySelectorAll("#list .list-item"),
+          ].find((div) =>
+            div.querySelector("button").getAttribute("onclick").includes(i.id),
+          );
+          if (listItem) {
+            listItem.scrollIntoView({ behavior: "smooth", block: "center" });
+            highlightElement(listItem);
+          }
+        });
 
-cell.appendChild(nodeDiv);
-
+        cell.appendChild(nodeDiv);
 
         // Aggiorna contatori
         document.getElementById("total").innerText = items.length;
@@ -854,69 +876,79 @@ cell.appendChild(nodeDiv);
         document.getElementById("s4").innerText = count["Other"] || 0;
 
         // Dopo aver creato tutti i div .list-item
-document.querySelectorAll(".delete-btn").forEach(btn => {
-  btn.addEventListener("click", () => removeItem(btn.dataset.id));
-});
-
+        document.querySelectorAll(".delete-btn").forEach((btn) => {
+          btn.addEventListener("click", () => removeItem(btn.dataset.id));
+        });
       }
       //render function finishes here
 
-
-
-
       //
-function render() {
-  const list = document.getElementById("list");
-  const search = document.getElementById("search").value.toLowerCase();
-  
-  list.innerHTML = "";
-  addMapColumns();
+      function render() {
+        const list = document.getElementById("list");
+        const search = document.getElementById("search").value.toLowerCase();
 
-  let count = {
-    "Client Requests": 0,
-    "Manual Tool Work": 0,
-    "Internal Knowledge": 0,
-    "Other": 0
-  };
+        list.innerHTML = "";
+        addMapColumns();
 
-  // Reset Priority Matrix
-  const matrixCells = ["low-effort-low-impact", "high-effort-low-impact", "low-effort-high-impact", "high-effort-high-impact"];
-  matrixCells.forEach(id => {
-    const labels = {
-      "low-effort-low-impact": "Low Effort / Low Impact",
-      "high-effort-low-impact": "High Effort / Low Impact",
-      "low-effort-high-impact": "Low Effort / High Impact",
-      "high-effort-high-impact": "High Effort / High Impact"
-    };
-    document.getElementById(id).innerHTML = `<strong>${labels[id]}</strong><br>`;
-  });
+        let count = {
+          "Client Requests": 0,
+          "Manual Tool Work": 0,
+          "Internal Knowledge": 0,
+          Other: 0,
+        };
 
-  let filtered = items.filter(i => JSON.stringify(i).toLowerCase().includes(search));
+        // Reset Priority Matrix
+        const matrixCells = [
+          "low-effort-low-impact",
+          "high-effort-low-impact",
+          "low-effort-high-impact",
+          "high-effort-high-impact",
+        ];
+        matrixCells.forEach((id) => {
+          const labels = {
+            "low-effort-low-impact": "Low Effort / Low Impact",
+            "high-effort-low-impact": "High Effort / Low Impact",
+            "low-effort-high-impact": "Low Effort / High Impact",
+            "high-effort-high-impact": "High Effort / High Impact",
+          };
+          document.getElementById(id).innerHTML =
+            `<strong>${labels[id]}</strong><br>`;
+        });
 
-  // Ordenación
-  const sortBy = document.getElementById("sortSelect").value;
-  filtered.sort((a, b) => {
-    if (sortBy === "priority") return b.priorityScore - a.priorityScore;
-    if (sortBy === "impact") return b.impactScore - a.impactScore;
-    if (sortBy === "effort") return a.effort - b.effort;
-    if (sortBy === "date") return new Date(b.createdAt) - new Date(a.createdAt);
-    return 0;
-  });
+        let filtered = items.filter((i) =>
+          JSON.stringify(i).toLowerCase().includes(search),
+        );
 
-  filtered.forEach((i) => {
-    // 1. Lista Bottleneck (Fase: Entry Processing)
-    const div = document.createElement("div");
-    div.className = "list-item";
-    let color = i.priorityScore > 2.5 ? "#1E40AF" : i.priorityScore > 1.5 ? "#60A5FA" : "#DBEAFE";
+        // Ordenación
+        const sortBy = document.getElementById("sortSelect").value;
+        filtered.sort((a, b) => {
+          if (sortBy === "priority") return b.priorityScore - a.priorityScore;
+          if (sortBy === "impact") return b.impactScore - a.impactScore;
+          if (sortBy === "effort") return a.effort - b.effort;
+          if (sortBy === "date")
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          return 0;
+        });
 
-    // Reinsertamos los campos de Pregunta y Respuesta
-    div.innerHTML = `
+        filtered.forEach((i) => {
+          // 1. Lista Bottleneck (Fase: Entry Processing)
+          const div = document.createElement("div");
+          div.className = "list-item";
+          let color =
+            i.priorityScore > 2.5
+              ? "#1E40AF"
+              : i.priorityScore > 1.5
+                ? "#60A5FA"
+                : "#DBEAFE";
+
+          // Reinsertamos los campos de Pregunta y Respuesta
+          div.innerHTML = `
       <strong>${i.process}</strong><span class="tag">${i.category}</span>
       <p><b>Role:</b> ${i.role}</p>
       <p><b>Problem:</b> ${i.problem}</p>
       <p><b>Impact:</b> ${i.impact}</p>
       <p><b>AI Agent:</b> ${i.agent}</p>
-      
+      ${i.developerNotes ? `<p><b>Developer Notes:</b> ${i.developerNotes}</p>` : ""}
       ${i.frequentQuestion ? `<p style="color: #2563eb;"><b>Frequent Question:</b> ${i.frequentQuestion}</p>` : ""}
       ${i.response ? `<p style="color: #16a34a;"><b>Response:</b> ${i.response}</p>` : ""}
       
@@ -927,41 +959,50 @@ function render() {
       <button onclick="editItem('${i.id}')">Edit</button>
       <button onclick="removeItem('${i.id}')" class="secondary">Delete</button>
     `;
-    list.appendChild(div);
+          list.appendChild(div);
 
-    // 2. AI Opportunity Map
-    const nodeMap = document.createElement("div");
-    nodeMap.className = "node";
-    nodeMap.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong><br>${i.process}`;
-    nodeMap.onclick = () => div.scrollIntoView({ behavior: "smooth", block: "center" });
-    const colId = "map-" + i.category.replace(/\s/g, "");
-    if (document.getElementById(colId)) document.getElementById(colId).appendChild(nodeMap);
+          // 2. AI Opportunity Map
+          const nodeMap = document.createElement("div");
+          nodeMap.className = "node";
+          nodeMap.innerHTML = `<strong>${i.agent || "AI Opportunity"}</strong><br>${i.process}`;
+          nodeMap.onclick = () =>
+            div.scrollIntoView({ behavior: "smooth", block: "center" });
+          const colId = "map-" + i.category.replace(/\s/g, "");
+          if (document.getElementById(colId))
+            document.getElementById(colId).appendChild(nodeMap);
 
-    // 3. Priority Matrix
-    const e = i.effort, imp = i.impactScore;
-    let matrixId = (e <= 5 && imp <= 5) ? "low-effort-low-impact" : 
-                   (e > 5 && imp <= 5) ? "high-effort-low-impact" : 
-                   (e <= 5 && imp > 5) ? "low-effort-high-impact" : "high-effort-high-impact";
-    
-    const nodeMatrix = document.createElement("div");
-    nodeMatrix.className = "node";
-    nodeMatrix.innerHTML = `<strong>${i.agent}</strong>`;
-    nodeMatrix.onclick = () => div.scrollIntoView({ behavior: "smooth", block: "center" });
-    document.getElementById(matrixId).appendChild(nodeMatrix);
+          // 3. Priority Matrix
+          const e = i.effort,
+            imp = i.impactScore;
+          let matrixId =
+            e <= 5 && imp <= 5
+              ? "low-effort-low-impact"
+              : e > 5 && imp <= 5
+                ? "high-effort-low-impact"
+                : e <= 5 && imp > 5
+                  ? "low-effort-high-impact"
+                  : "high-effort-high-impact";
 
-    // 4. Actualizar Contadores (Fase: Data Archiving)
-    if (count.hasOwnProperty(i.category)) {
-      count[i.category]++;
-    }
-  });
+          const nodeMatrix = document.createElement("div");
+          nodeMatrix.className = "node";
+          nodeMatrix.innerHTML = `<strong>${i.agent}</strong>`;
+          nodeMatrix.onclick = () =>
+            div.scrollIntoView({ behavior: "smooth", block: "center" });
+          document.getElementById(matrixId).appendChild(nodeMatrix);
 
-  // Update Stats en el Header
-  document.getElementById("total").innerText = filtered.length;
-  document.getElementById("s1").innerText = count["Client Requests"];
-  document.getElementById("s2").innerText = count["Manual Tool Work"];
-  document.getElementById("s3").innerText = count["Internal Knowledge"];
-  document.getElementById("s4").innerText = count["Other"];
-}
+          // 4. Actualizar Contadores (Fase: Data Archiving)
+          if (count.hasOwnProperty(i.category)) {
+            count[i.category]++;
+          }
+        });
+
+        // Update Stats en el Header
+        document.getElementById("total").innerText = filtered.length;
+        document.getElementById("s1").innerText = count["Client Requests"];
+        document.getElementById("s2").innerText = count["Manual Tool Work"];
+        document.getElementById("s3").innerText = count["Internal Knowledge"];
+        document.getElementById("s4").innerText = count["Other"];
+      }
       //
 
       function editItem(id) {
@@ -982,6 +1023,8 @@ function render() {
         document.getElementById("frequentQuestion").value =
           item.frequentQuestion || "";
         document.getElementById("response").value = item.response || "";
+        document.getElementById("developerNotes").value =
+          item.developerNotes || "";
 
         updateEffortAccess();
         updateFieldAccess();
@@ -1019,6 +1062,7 @@ function render() {
         item.impactScore = parseInt(
           document.getElementById("impactScore").value,
         );
+        item.developerNotes = document.getElementById("developerNotes").value;
         item.priorityScore = parseFloat(
           (item.impactScore / item.effort).toFixed(2),
         );
@@ -1080,8 +1124,6 @@ function render() {
         }
       }
 
-
-
       function exportCSV() {
         const data = items.map((i) => ({
           Process: i.process,
@@ -1122,13 +1164,14 @@ function render() {
         document.getElementById("reviewedByDeveloper").checked = false;
         document.getElementById("frequentQuestion").value = "";
         document.getElementById("response").value = "";
+        document.getElementById("developerNotes").value = "";
         updateFieldAccess(); // resetta i campi correttamente
       }
+
 
       function updateFieldAccess() {
         const reviewed = document.getElementById("reviewedByDeveloper").checked;
 
-        // Lista di tutti i campi tranne effort
         const fields = [
           "process",
           "problem",
@@ -1141,11 +1184,31 @@ function render() {
         ];
 
         fields.forEach((id) => {
-          document.getElementById(id).disabled = reviewed; // read-only se checkbox spuntata
+          document.getElementById(id).disabled = reviewed;
         });
 
-        // Effort è l’unico abilitato se checkbox spuntata
         document.getElementById("effort").disabled = !reviewed;
+
+        // 👇 SHOW/HIDE
+        const devNotesContainer = document.getElementById(
+          "developerNotesContainer",
+        );
+        devNotesContainer.style.display = reviewed ? "block" : "none";
+
+        // 👇 CLEAR se deselezionato (PUNTO 3)
+        if (!reviewed) {
+          document.getElementById("developerNotes").value = "";
+        }
+
+        // 👇 READ-ONLY per non developer (PUNTO 4)
+        const role = document.getElementById("roleSelect").value;
+        const devNotes = document.getElementById("developerNotes");
+
+        if (role === "Developer" && reviewed) {
+          devNotes.disabled = false;
+        } else {
+          devNotes.disabled = true;
+        }
       }
 
       function highlightElement(el) {
